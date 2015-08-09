@@ -1,6 +1,10 @@
 local _G = _G  -- noqa
 local pretty = require "pretty"
-local pp = pretty.p  -- noqa
+local pp, ppf = pretty.p, pretty.pf  -- noqa
+
+ppf("pretty.lua test.")
+
+ppf("_G=%s", _G)
 
 local Hoge = {}
 Hoge.__index = Hoge

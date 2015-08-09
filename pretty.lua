@@ -15,7 +15,6 @@ local config = {
 }
 _M.config = config
 
-local global_classes_ = nil
 
 local function istype_(v, ...)
   local types = {...}
@@ -26,14 +25,8 @@ local function istype_(v, ...)
   return false
 end
 
-local function pget(func)
-  local ok, val = pcall(func)
-  if ok then return val end
-  return nil
-end
-
-local function gclasses_()
-  local classes = {}
+local function gclasses_(classes)
+  if next(classes) ~= nil then return classes end
   for k, v in pairs(_G) do
     if type(v) == 'table' then
       classes[v] = k
@@ -42,19 +35,20 @@ local function gclasses_()
   return classes
 end
 
-local function metaname_(val)
-  if global_classes_ == nil then
-    global_classes_ = {}
-    for k, v in pairs(_G) do
-      if type(v) == 'table' then
-        global_classes_[v] = k
-      end
-    end
+local function metaname_(val, classes)
+  local mt; do
+    local ok, mt_ = pcall(function() return debug.getmetatable(val) end)
+    mt = ok and mt_
   end
-  local mt = pget(function() return debug.getmetatable(val) end)
   if not mt then return nil end
-  local mtname = pget(function() return mt.__name end)
-  return mtname or global_classes_[mt]
+
+  local mtname; do 
+    local ok, mtname_ = pcall(function() return mt.__name end)
+    mtname = ok and mtname_
+  end
+  if mtname then return mtname end
+
+  return gclasses_(classes)[mt]
 end
 
 local function sortedkeys(t)
@@ -84,7 +78,7 @@ end
 local function _pretty(t, opt)
   opt = opt or {}
   opt.depth = opt.depth or config.depth
-  opt.classes = opt.classes or gclasses_()
+  opt.classes = {}
   if t == nil then
     return 'nil'
   elseif type(t) == 'string' then
@@ -101,6 +95,10 @@ local function _pretty(t, opt)
     return string.format('%s{userdata:*%s}', mtname or '', ptr)
   elseif type(t) == 'function' then
     local s = tostring(t)
+    local builtin = s:match('^function: (builtin#%d+)$')
+    if builtin then
+      return string.format('<function %s>', builtin)
+    end
     local ptr = s:match('^function: (0x.-)$')
     if not ptr then return s end
     local info = debug.getinfo(t)
@@ -195,7 +193,7 @@ function _M.print(...)
   print(pretty(...))
 end
 
-function _M.printf(f, ...)
+function _M.format(f, ...)
   local n = select('#', ...)
   local args = {}
   for i = 1, n do
@@ -206,10 +204,11 @@ function _M.printf(f, ...)
       args[i] = pretty(a)
     end
   end
-  print(string.format(f, unpack(args)))
+  return string.format(f, unpack(args))
 end
 
 _M.p = _M.print
+_M.pf = function(...) print(_M.format(...)) end
 
 setmetatable(_M, {
   __call=function(_, ...) return pretty(...) end,

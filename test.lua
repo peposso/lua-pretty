@@ -40,5 +40,5 @@ Hoge.__name = 'Piyo'
 assert(pretty(hoge) == 'Piyo{prop1=1,prop2={2,{3}}}')
 Hoge.__name = nil
 
-tp.p({1, 2, 3, 4, 5, hello='world', [500]='test'})
-tp.p(5, 4, 6)
+tp({1, 2, 3, 4, 5, hello='world', [500]='test'})
+tp(5, 4, 6)

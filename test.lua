@@ -1,6 +1,7 @@
 local _G = _G  -- noqa
 local pretty = require "pretty"
 local pp, ppf = pretty.p, pretty.pf  -- noqa
+local tp = require "tinypretty"
 
 ppf("pretty.lua test.")
 
@@ -39,3 +40,5 @@ Hoge.__name = 'Piyo'
 assert(pretty(hoge) == 'Piyo{prop1=1,prop2={2,{3}}}')
 Hoge.__name = nil
 
+tp.p({1, 2, 3, 4, 5, hello='world', [500]='test'})
+tp.p(5, 4, 6)
